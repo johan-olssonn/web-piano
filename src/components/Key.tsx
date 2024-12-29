@@ -1,5 +1,12 @@
 import { Howl } from "howler";
-import { ElementRef, Fragment, useMemo, useRef, useState } from "react";
+import {
+  ElementRef,
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Key as KeyType } from "../types/Key";
 import { mapOctaveToColor } from "../utils";
 import cx from "classnames";
@@ -23,10 +30,21 @@ export default function Key({ pianoKey, showKeyName, onAudioLoaded }: Props) {
 
   const black = typeof pianoKey.blackKeyIndex === "number";
 
+  useEffect(() => {
+    if (audioRef) {
+      audioRef.current?.load();
+    }
+  }, [audioRef]);
+
   const sound = useMemo(
     () =>
       new Howl({
         src: [pianoKey.source],
+        onload: () => {
+          setIsLoading(false);
+          console.log("onload");
+          onAudioLoaded();
+        },
       }),
     [pianoKey]
   );
@@ -48,14 +66,6 @@ export default function Key({ pianoKey, showKeyName, onAudioLoaded }: Props) {
 
   return (
     <Fragment>
-      <audio
-        src={pianoKey.source}
-        ref={audioRef}
-        onCanPlay={() => {
-          setIsLoading(false);
-          onAudioLoaded();
-        }}
-      />
       <button
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}

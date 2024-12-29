@@ -9,7 +9,9 @@ function App() {
   const [numberOfLoadedKeys, setNumberOfLoadedKeys] = useState(0);
 
   useEffect(() => {
-    setLoadingPercentage(Math.round((numberOfLoadedKeys / keys.length) * 100));
+    setLoadingPercentage(
+      Math.min(Math.round((numberOfLoadedKeys / keys.length) * 100), 100)
+    );
   }, [numberOfLoadedKeys]);
 
   return (
