@@ -7,6 +7,7 @@ import cx from "classnames";
 type Props = {
   pianoKey: KeyType;
   showKeyName?: boolean;
+  onAudioLoaded: () => void;
 };
 
 const whiteKeyWidth = 56;
@@ -14,9 +15,10 @@ const blackKeyWidth = 38;
 const margin = 2;
 const fadeTimeInMs = 200;
 
-export default function Key({ pianoKey, showKeyName }: Props) {
+export default function Key({ pianoKey, showKeyName, onAudioLoaded }: Props) {
   const audioRef = useRef<ElementRef<"audio">>(null);
   const [isTouching, setIsTouching] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPlayId, setCurrentPlayId] = useState<number>();
 
   const black = typeof pianoKey.blackKeyIndex === "number";
@@ -30,6 +32,7 @@ export default function Key({ pianoKey, showKeyName }: Props) {
   );
 
   const onTouchStart = () => {
+    if (isLoading) return;
     setIsTouching(true);
     const id = sound.play();
     setCurrentPlayId(id);
@@ -45,10 +48,18 @@ export default function Key({ pianoKey, showKeyName }: Props) {
 
   return (
     <Fragment>
-      <audio src={pianoKey.source} ref={audioRef} />
+      <audio
+        src={pianoKey.source}
+        ref={audioRef}
+        onCanPlay={() => {
+          setIsLoading(false);
+          onAudioLoaded();
+        }}
+      />
       <button
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        disabled={isLoading}
         style={{
           left: calculateLeftOffset(pianoKey.blackKeyIndex),
           width: black ? blackKeyWidth : whiteKeyWidth,
@@ -66,8 +77,11 @@ export default function Key({ pianoKey, showKeyName }: Props) {
         <div className="flex flex-col justify-end items-center h-full">
           {showKeyName && (
             <p
-              className="text-sm font-bold mb-2 select-none"
-              style={{ color: mapOctaveToColor[pianoKey.octave] }}
+              className="text-sm font-bold mb-2 select-none transition-opacity"
+              style={{
+                color: mapOctaveToColor[pianoKey.octave],
+                opacity: isLoading ? 0.2 : 1,
+              }}
             >
               {pianoKey.name}
             </p>
